@@ -24,6 +24,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY scripts /scripts
+COPY patches /patches
 
 RUN /scripts/build_musl.sh
 

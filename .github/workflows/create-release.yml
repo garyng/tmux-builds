@@ -5,9 +5,7 @@ on:
   push:
     tags:
       - 'v*'
-  # Create a preview release
-  schedule:
-    - cron: '0 5 * * *'
+  # Create a preview release (by hand: this fork has no nightly schedule)
   workflow_dispatch:
 
 env:
@@ -45,7 +43,8 @@ jobs:
           else
             VERSION="${GITHUB_REF_NAME#v}"
             echo "release_tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-            echo "tmux_version=$VERSION" >> $GITHUB_OUTPUT
+            # v3.7c-kitty.1 builds tmux 3.7c: what follows the dash is this fork's patch level
+            echo "tmux_version=${VERSION%%-*}" >> $GITHUB_OUTPUT
           fi
 
       - name: Get tmux upstream HEAD SHA
@@ -238,8 +237,8 @@ jobs:
             NOTES="Static builds of the latest tmux from upstream master for Linux (musl) and macOS."
             PRERELEASE_FLAG="--prerelease"
           else
-            TITLE="tmux v$TMUX_VERSION"
-            NOTES="Static builds of tmux version $TMUX_VERSION for Linux (musl) and macOS."
+            TITLE="tmux $RELEASE_TAG"
+            NOTES="Static builds of tmux version $TMUX_VERSION for Linux (musl) and macOS, with this fork's patches/ applied."
             PRERELEASE_FLAG=""
           fi
 

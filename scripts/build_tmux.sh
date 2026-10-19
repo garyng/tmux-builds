@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ -z "${PREFIX:-}" ]]; then
     echo "Error: PREFIX must be set" >&2
     exit 1
@@ -23,6 +25,12 @@ else
     tar xzf "tmux-${TMUX_VERSION}.tar.gz"
     cd "tmux-${TMUX_VERSION}"
 fi
+
+for p in "${SCRIPTDIR}"/../patches/*.patch; do
+    [[ -e "$p" ]] || continue
+    echo "Applying ${p##*/}"
+    patch -p1 < "$p"
+done
 
 IS_MACOS=false
 if [[ "$(uname)" == "Darwin" ]]; then
