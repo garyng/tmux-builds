@@ -1,6 +1,6 @@
 # tmux builds
 
-> **This fork** builds tmux with the fixes in [`patches/`](patches/) applied, until tmux ships them: reading a kitty keyboard protocol key that has no modifier field (a plain Escape is `CSI 27 u`), and sending Ctrl+Backspace as `^H` to a program that hasn't asked for extended keys (tmux dropped it). Release tags are `v<tmux version>-<name>.<n>`, such as `v3.7c-kitty.1`; a new tmux release needs only a new tag, unless a patch no longer applies.
+> **This fork** builds tmux with the fixes in [`patches/`](patches/) applied, until tmux ships them: reading a kitty keyboard protocol key that has no modifier field (a plain Escape is `CSI 27 u`); sending Ctrl+Backspace as `^H` to a program that hasn't asked for extended keys (tmux dropped it); and waiting up to 500 ms for the rest of a mouse report that arrives in two parts, as one over ssh sometimes does (`escape-time` gave up first and typed the rest into the pane). Release tags are `v<tmux version>-<name>.<n>`, such as `v3.7c-kitty.1`; a new tmux release needs only a new tag, unless a patch no longer applies.
 
 This repository provides ready to use binaries of the [tmux](https://github.com/tmux/tmux/) terminal multiplexer.
 

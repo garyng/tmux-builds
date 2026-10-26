@@ -1,0 +1,62 @@
+From d061163c855ce843fcf18399eecfa14402817d5f Mon Sep 17 00:00:00 2001
+From: Gary Ng <garyng.zhongbo@gmail.com>
+Date: Mon, 26 Oct 2026 14:19:12 +0000
+Subject: [PATCH] Wait longer for the rest of a split mouse report
+
+A terminal on a slow or bursty connection can send an SGR mouse report
+in two parts: over ssh from Windows Terminal, about 1 in 400 arrived as
+\033[<3 and then 5;26;43M, the rest 13 to 189 ms later. escape-time
+(10 ms by default) gives up on the partial key first, so the start
+becomes M-[ and the rest is typed into the pane as text. Wait at least
+500 ms for a partial key that can only be a mouse report, as for a
+partial bracketed paste end; nobody types \033[< by hand, so Escape
+keeps escape-time.
+---
+ tty-keys.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/tty-keys.c b/tty-keys.c
+index d3a93f1..fd392a0 100644
+--- a/tty-keys.c
++++ b/tty-keys.c
+@@ -616,6 +616,25 @@ tty_keys_partial_paste_end(const char *buf, size_t len)
+ 	return (memcmp(buf, paste_end, len) == 0);
+ }
+ 
++/*
++ * Is this the start of an SGR mouse report? A terminal on a slow connection
++ * can send one in two parts, which escape-time is too short for, and nobody
++ * types \033[< by hand.
++ */
++static int
++tty_keys_partial_mouse(const char *buf, size_t len)
++{
++	size_t	i;
++
++	if (len < 3 || buf[0] != '\033' || buf[1] != '[' || buf[2] != '<')
++		return (0);
++	for (i = 3; i < len; i++) {
++		if ((buf[i] < '0' || buf[i] > '9') && buf[i] != ';')
++			return (0);
++	}
++	return (1);
++}
++
+ /* Look up part of the next key. */
+ static int
+ tty_keys_next1(struct tty *tty, const char *buf, size_t len, key_code *key,
+@@ -976,6 +995,11 @@ partial_key:
+ 		if (delay < 500)
+ 			delay = 500;
+ 	}
++	if (tty_keys_partial_mouse(buf, len)) {
++		log_debug("%s: increasing delay (partial mouse)", c->name);
++		if (delay < 500)
++			delay = 500;
++	}
+ 	if ((tty->flags & (TTY_WAITFG|TTY_WAITBG) ||
+ 	    (tty->flags & TTY_ALL_REQUEST_FLAGS) != TTY_ALL_REQUEST_FLAGS) ||
+ 	    !TAILQ_EMPTY(&c->input_requests)) {
+-- 
+2.56.0
+
