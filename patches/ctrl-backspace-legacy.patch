@@ -1,0 +1,32 @@
+From b4fc052d0a2a13628e2026958449bcd7f578c607 Mon Sep 17 00:00:00 2001
+From: Gary Ng <garyng.zhongbo@gmail.com>
+Date: Mon, 26 Oct 2026 00:43:55 +0000
+Subject: [PATCH] Send C-BSpace as ^H to a program without extended keys
+
+A terminal in kitty or modifyOtherKeys mode sends Ctrl+Backspace as
+its own key (CSI 127;5u), which tmux reads as C-BSpace. A program that
+has not asked for extended keys gets keys in the standard form, and
+input_key_vt10x has none for Ctrl with DEL, so it dropped the key: in
+a popup, where no key binding can turn it into something else,
+Ctrl+Backspace did nothing. Send ^H, as xterm and Windows Terminal do
+for Ctrl+Backspace outside those modes.
+---
+ input-keys.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/input-keys.c b/input-keys.c
+index fdce540..3171b7b 100644
+--- a/input-keys.c
++++ b/input-keys.c
+@@ -529,6 +529,8 @@ input_key_vt10x(struct bufferevent *bev, key_code key)
+ 			key = onlykey - '\030';
+ 		else if (onlykey >= '@' && onlykey <= '~')
+ 			key = onlykey & 0x1f;
++		else if (onlykey == 0x7f)
++			key = C0_BS;	/* C-BSpace, as terminals send it */
+ 		else
+ 			return (-1);
+ 	}
+-- 
+2.56.0
+
