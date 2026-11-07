@@ -17,6 +17,7 @@ jobs:
     outputs:
       is_preview: ${{ steps.set_type.outputs.is_preview }}
       tmux_version: ${{ steps.meta.outputs.tmux_version }}
+      tmux_ref: ${{ steps.meta.outputs.tmux_ref }}
       release_tag: ${{ steps.meta.outputs.release_tag }}
       upstream_changed: ${{ steps.check_changes.outputs.upstream_changed }}
       upstream_head_sha: ${{ steps.tmux_head.outputs.upstream_head_sha }}
@@ -43,8 +44,9 @@ jobs:
           else
             VERSION="${GITHUB_REF_NAME#v}"
             echo "release_tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-            # v3.7c-kitty.1 builds tmux 3.7c: what follows the dash is this fork's patch level
+            # v3.7c-kitty.5 builds garyng/tmux's tag 3.7c-kitty.5: tmux 3.7c with this fork's fixes
             echo "tmux_version=${VERSION%%-*}" >> $GITHUB_OUTPUT
+            echo "tmux_ref=${VERSION}" >> $GITHUB_OUTPUT
           fi
 
       - name: Get tmux upstream HEAD SHA
@@ -90,6 +92,7 @@ jobs:
     if: ${{ needs.setup.outputs.is_preview == 'false' || needs.setup.outputs.upstream_changed == 'true' }}
     env:
       TMUX_VERSION: ${{ needs.setup.outputs.tmux_version }}
+      TMUX_REF: ${{ needs.setup.outputs.tmux_ref }}
     strategy:
       fail-fast: false
       matrix:
@@ -217,6 +220,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_TAG: ${{ needs.setup.outputs.release_tag }}
       TMUX_VERSION: ${{ needs.setup.outputs.tmux_version }}
+      TMUX_REF: ${{ needs.setup.outputs.tmux_ref }}
       IS_PREVIEW: ${{ needs.setup.outputs.is_preview }}
       TMUX_SHA: ${{ needs.setup.outputs.upstream_head_sha }}
     steps:
@@ -238,7 +242,7 @@ jobs:
             PRERELEASE_FLAG="--prerelease"
           else
             TITLE="tmux $RELEASE_TAG"
-            NOTES="Static builds of tmux version $TMUX_VERSION for Linux (musl) and macOS, with this fork's patches/ applied."
+            NOTES="Static builds of garyng/tmux $TMUX_REF (tmux $TMUX_VERSION with this fork's fixes) for Linux (musl) and macOS."
             PRERELEASE_FLAG=""
           fi
 

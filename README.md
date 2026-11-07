@@ -1,6 +1,6 @@
 # tmux builds
 
-> **This fork** builds tmux with the fixes in [`patches/`](patches/) applied, until tmux ships them: reading a kitty keyboard protocol key that has no modifier field (a plain Escape is `CSI 27 u`); sending Ctrl+Backspace as `^H` to a program that hasn't asked for extended keys (tmux dropped it); waiting up to 500 ms for the rest of a mouse report that arrives in two parts, as one over ssh sometimes does (`escape-time` gave up first and typed the rest into the pane); and discarding a device attributes answer the terminal sends twice while tmux's own queries are open, as Windows Terminal over ssh sometimes does (tmux typed the second into the pane). Release tags are `v<tmux version>-<name>.<n>`, such as `v3.7c-kitty.1`; a new tmux release needs only a new tag, unless a patch no longer applies.
+> **This fork** builds tmux from [garyng/tmux](https://github.com/garyng/tmux), where each tmux release gets a branch (`3.7c-kitty`) carrying this fork's fixes as commits, until tmux ships them: reading a kitty keyboard protocol key that has no modifier field (a plain Escape is `CSI 27 u`); sending Ctrl+Backspace as `^H` to a program that hasn't asked for extended keys (tmux dropped it); waiting up to 500 ms for the rest of a mouse report that arrives in two parts, as one over ssh sometimes does (`escape-time` gave up first and typed the rest into the pane); and discarding a device attributes answer the terminal sends twice while tmux's own queries are open, as Windows Terminal over ssh sometimes does (tmux typed the second into the pane). A release tag here, `v<tmux version>-<name>.<n>` such as `v3.7c-kitty.5`, builds garyng/tmux's tag of the same name without the `v`, so a release is a tag in both. A new tmux release: rebase the branch onto it (`3.8-kitty`), then tag both. Up to `v3.7c-kitty.4`, the fixes were files in `patches/`, applied to tmux's release tarball.
 
 This repository provides ready to use binaries of the [tmux](https://github.com/tmux/tmux/) terminal multiplexer.
 
@@ -44,13 +44,21 @@ Two types of builds are provided:
 
 Adjust dependency versions in `versions.env` if needed.  
 
-Set the tmux version (without the `v` prefix) via build argument or environment variable.  
-To build from the latest `master` commit, set `TMUX_VERSION=preview`.
+Set the tmux version and the garyng/tmux tag to build (both without the `v` prefix) via build arguments or environment variables.  
+To build upstream's latest `master` commit, set `TMUX_VERSION=preview`.
 
 ```bash
-docker compose build --build-arg TMUX_VERSION=3.5a
+docker compose build --build-arg TMUX_VERSION=3.7c --build-arg TMUX_REF=3.7c-kitty.5
 # or
-TMUX_VERSION=3.5a docker compose build
+TMUX_VERSION=3.7c TMUX_REF=3.7c-kitty.5 docker compose build
+```
+
+To build a tmux tree on disk instead, such as an unpushed branch of a garyng/tmux clone, hand it to the build as the `tmux-src` context, and say so with `TMUX_SRC` (the context alone isn't enough: see the Dockerfile):
+
+```bash
+docker build --build-context tmux-src=../tmux --build-arg TMUX_SRC=/tmux-src --build-arg TMUX_VERSION=3.7c \
+    --build-arg MUSL_VERSION=1.2.5 --build-arg LIBEVENT_VERSION=2.1.12 --build-arg NCURSES_VERSION=6.5 \
+    --build-arg PREFIX=/build -t tmux-builder .
 ```
 
 Extract the binary:

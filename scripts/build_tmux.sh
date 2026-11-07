@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 if [[ -z "${PREFIX:-}" ]]; then
     echo "Error: PREFIX must be set" >&2
     exit 1
@@ -16,21 +14,28 @@ fi
 mkdir -p "$PREFIX/src"
 cd "$PREFIX/src"
 
-if [[ "${TMUX_VERSION}" == "preview" ]]; then
+# A release builds garyng/tmux at TMUX_REF, the tag of the same name without the v (v3.7c-kitty.5
+# builds 3.7c-kitty.5): tmux's release with this fork's fixes as commits. TMUX_SRC, a tmux tree on
+# disk, is built instead (in Docker, the tmux-src build context: an unpushed branch). A preview
+# builds upstream master.
+if [[ -n "${TMUX_SRC:-}" ]]; then
+    if [[ ! -e "${TMUX_SRC}/autogen.sh" ]]; then
+        echo "Error: TMUX_SRC=${TMUX_SRC} holds no tmux tree" >&2
+        exit 1
+    fi
+    echo "Building the tmux tree in ${TMUX_SRC}"
+    cp -a "${TMUX_SRC}" tmux
+elif [[ "${TMUX_VERSION}" == "preview" ]]; then
     git clone https://github.com/tmux/tmux.git
-    cd tmux
-    sh autogen.sh
 else
-    wget "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz"
-    tar xzf "tmux-${TMUX_VERSION}.tar.gz"
-    cd "tmux-${TMUX_VERSION}"
+    if [[ -z "${TMUX_REF:-}" ]]; then
+        echo "Error: TMUX_REF must be set: the garyng/tmux tag to build" >&2
+        exit 1
+    fi
+    git clone --depth 1 --branch "${TMUX_REF}" https://github.com/garyng/tmux.git
 fi
-
-for p in "${SCRIPTDIR}"/../patches/*.patch; do
-    [[ -e "$p" ]] || continue
-    echo "Applying ${p##*/}"
-    patch -p1 < "$p"
-done
+cd tmux
+sh autogen.sh
 
 IS_MACOS=false
 if [[ "$(uname)" == "Darwin" ]]; then

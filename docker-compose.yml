@@ -5,6 +5,7 @@ services:
     build:
       args:
         - TMUX_VERSION=${TMUX_VERSION}
+        - TMUX_REF=${TMUX_REF}
         - MUSL_VERSION=${MUSL_VERSION}
         - LIBEVENT_VERSION=${LIBEVENT_VERSION}
         - NCURSES_VERSION=${NCURSES_VERSION}
