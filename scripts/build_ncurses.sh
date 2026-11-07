@@ -13,7 +13,7 @@ fi
 
 mkdir -p "$PREFIX/src"
 cd "$PREFIX/src"
-wget "https://invisible-island.net/archives/ncurses/ncurses-${NCURSES_VERSION}.tar.gz"
+wget "https://ftp.gnu.org/gnu/ncurses/ncurses-${NCURSES_VERSION}.tar.gz"
 tar xzf "ncurses-${NCURSES_VERSION}.tar.gz"
 cd "ncurses-${NCURSES_VERSION}"
 

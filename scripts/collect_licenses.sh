@@ -21,7 +21,7 @@ rm -rf "musl-${MUSL_VERSION}" "musl-${MUSL_VERSION}.tar.gz"
 
 # ncurses
 echo "Collecting ncurses license..."
-wget -q "https://invisible-island.net/archives/ncurses/ncurses-${NCURSES_VERSION}.tar.gz"
+wget -q "https://ftp.gnu.org/gnu/ncurses/ncurses-${NCURSES_VERSION}.tar.gz"
 tar xzf "ncurses-${NCURSES_VERSION}.tar.gz"
 cp "ncurses-${NCURSES_VERSION}/COPYING" "$PREFIX/licenses/COPYING.ncurses"
 rm -rf "ncurses-${NCURSES_VERSION}" "ncurses-${NCURSES_VERSION}.tar.gz"
