@@ -42,8 +42,10 @@ if [[ "$(uname)" == "Darwin" ]]; then
     IS_MACOS=true
 fi
 
+# --enable-sixel: without it tmux drops a pane's Sixel images silently (no external library).
 CONFIGURE_FLAGS=(
     --prefix=${PREFIX}
+    --enable-sixel
     --includedir="${PREFIX}/include"
     --libdir="${PREFIX}/lib"
     LIBEVENT_LIBS="-L${PREFIX}/lib -levent"
