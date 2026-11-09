@@ -213,6 +213,9 @@ jobs:
 
   create-release:
     needs: [setup, build, collect-licenses]
+    # The Linux builds and the licences make a release; a macOS build that failed or never got a
+    # runner (macOS arm64's queue, twice on 2026-11-09) is left out of it.
+    if: ${{ !cancelled() && needs.collect-licenses.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -245,6 +248,16 @@ jobs:
             NOTES="Static builds of garyng/tmux $TMUX_REF (tmux $TMUX_VERSION with this fork's fixes) for Linux (musl) and macOS."
             PRERELEASE_FLAG=""
           fi
+
+          for arch in x86_64 arm64; do
+            if ! ls dist/tmux-*-linux-${arch}.tar.gz >/dev/null 2>&1; then
+              echo "Error: no Linux ${arch} build" >&2
+              exit 1
+            fi
+            if ! ls dist/tmux-*-macos-${arch}.tar.gz >/dev/null 2>&1; then
+              NOTES="${NOTES} No macOS ${arch} build in this release."
+            fi
+          done
 
           gh release delete "$RELEASE_TAG" --repo ${GITHUB_REPOSITORY} --yes || true
 
